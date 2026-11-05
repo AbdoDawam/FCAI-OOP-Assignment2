@@ -1,7 +1,11 @@
 #ifndef MACHINE_H
 #define MACHINE_H
 #include <iostream>
+#include <fstream>
 using namespace std;
+
+#include "CPU.h"
+#include "Memory.h"
 
 class Machine{
     CPU cpu;
