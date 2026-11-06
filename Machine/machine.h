@@ -18,7 +18,7 @@ public:
     void overwriteValue();
     void runAtOnce(int maxSteps= 1000);
     void runStepByStep();
-    const void displayState();
+    void displayState () const;
     void resetMachine();
 
 };
