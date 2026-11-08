@@ -1,10 +1,3 @@
-/*
- * File: CPU.h
- * Date: 6 Oct 1973
- * Package: Processing
- * Description: Central Processing Unit for the Vole Machine Simulator.
- */
-
 #ifndef CPU_H
 #define CPU_H
 
@@ -12,7 +5,6 @@
 #include "Memory.h"
 #include "Register.h"
 #include <string>
-#include <vector>
 
 class CPU {
 private:
@@ -22,13 +14,10 @@ private:
     Register reg;
     ALU alu;
 
-    // Diagnostic tracking for GUI visualization
     int lastExecutedPC;
     int lastModifiedReg;
     int lastWrittenMem;
-    int stepCount;
     std::string lastActionDescription;
-    std::vector<std::string> screenHexHistory;
 
 public:
     CPU();
@@ -47,15 +36,9 @@ public:
     void setRegister(int index, std::string val);
     void reset(int startAddr = 0);
 
-    // GUI & Diagnostic Helpers
-    const ALU& getALU() const;
-    int getLastExecutedPC() const;
     int getLastModifiedReg() const;
     int getLastWrittenMem() const;
-    int getStepCount() const;
     std::string getLastActionDescription() const;
-    const std::vector<std::string>& getScreenHexHistory() const;
-    static std::string disassembleInstruction(const std::string& inst);
 };
 
-#endif // CPU_H
+#endif

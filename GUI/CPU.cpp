@@ -1,16 +1,6 @@
-/*
- * File: CPU.cpp
- * Date: 6 Oct 1973
- * Package: Processing
- * Description: Implementation of CPU instruction cycle (fetch, decode, execute).
- */
-
 #include "CPU.h"
-#include <algorithm>
 #include <cctype>
 #include <sstream>
-
-// The black monkey is jumping on the bed
 
 CPU::CPU()
     : pc(0),
@@ -19,24 +9,19 @@ CPU::CPU()
       lastExecutedPC(-1),
       lastModifiedReg(-1),
       lastWrittenMem(-1),
-      stepCount(0),
-      lastActionDescription("CPU Initialized (Ready)") {}
-
-// /*/*/*/*………
+      lastActionDescription("Ready") {}
 
 void CPU::fetch(const Memory& mem) {
     if (pc < 0 || pc > 254) {
         ir = "0000";
         halted = true;
-        lastActionDescription = "PC out of bounds (" + ALU::decToHex(pc, 2) + ") - Halted";
+        lastActionDescription = "PC out of bounds - Halted";
         return;
     }
     lastExecutedPC = pc;
     ir = mem.getWord(pc);
     pc += 2;
 }
-
-// /*/*/*/*………
 
 bool CPU::isValidInstruction(std::string inst) {
     if (inst.size() != 4) return false;
@@ -55,8 +40,6 @@ bool CPU::isValidInstruction(std::string inst) {
 
     return true;
 }
-
-// /*/*/*/*………
 
 void CPU::decodeAndExecute(Memory& mem, std::string& screenBuffer) {
     lastModifiedReg = -1;
@@ -77,20 +60,20 @@ void CPU::decodeAndExecute(Memory& mem, std::string& screenBuffer) {
     std::ostringstream desc;
 
     switch (op) {
-        case '1': { // 1RXY: LOAD R from Memory[XY]
+        case '1': {
             std::string val = mem.getCell(addr);
             reg.setReg(rIdx, val);
             lastModifiedReg = rIdx;
-            desc << "LOAD R" << ir[1] << " <- Mem[0x" << xy << "] (0x" << val << ")";
+            desc << "LOAD R" << ir[1] << " <- Mem[" << xy << "]";
             break;
         }
-        case '2': { // 2RXY: LOAD R with immediate XY
+        case '2': {
             reg.setReg(rIdx, xy);
             lastModifiedReg = rIdx;
-            desc << "LOAD R" << ir[1] << " <- Immediate 0x" << xy;
+            desc << "LOAD R" << ir[1] << " <- " << xy;
             break;
         }
-        case '3': { // 3RXY: STORE R into Memory[XY] (FF = Screen)
+        case '3': {
             std::string val = reg.getReg(rIdx);
             mem.setCell(addr, val);
             lastWrittenMem = addr;
@@ -98,102 +81,81 @@ void CPU::decodeAndExecute(Memory& mem, std::string& screenBuffer) {
                 int byteVal = ALU::hexToDec(val);
                 if (byteVal >= 32 && byteVal <= 126) {
                     screenBuffer.push_back(static_cast<char>(byteVal));
-                } else if (byteVal == 10 || byteVal == 13) {
-                    screenBuffer.push_back('\n');
                 } else {
-                    screenBuffer += "[" + val + "h=" + std::to_string(byteVal) + "] ";
+                    screenBuffer += val + " ";
                 }
-                screenHexHistory.push_back(val);
-                desc << "STORE R" << ir[1] << " (0x" << val << ") -> Screen [0xFF]";
+                desc << "STORE R" << ir[1] << " -> Screen [FF]";
             } else {
-                desc << "STORE Mem[0x" << xy << "] <- R" << ir[1] << " (0x" << val << ")";
+                desc << "STORE Mem[" << xy << "] <- R" << ir[1];
             }
             break;
         }
-        case '4': { // 40RS: MOVE R (ir[2]) to S (ir[3])
+        case '4': {
             std::string val = reg.getReg(sIdx);
             reg.setReg(tIdx, val);
             lastModifiedReg = tIdx;
-            desc << "MOVE R" << ir[3] << " <- R" << ir[2] << " (0x" << val << ")";
+            desc << "MOVE R" << ir[3] << " <- R" << ir[2];
             break;
         }
-        case '5': { // 5RST: ADD Two's Complement R <- S + T
-            std::string vS = reg.getReg(sIdx);
-            std::string vT = reg.getReg(tIdx);
-            std::string res = alu.addTwosComplement(vS, vT);
+        case '5': {
+            std::string res = alu.addTwosComplement(reg.getReg(sIdx), reg.getReg(tIdx));
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "ADD(2's) R" << ir[1] << " <- R" << ir[2] << "(0x" << vS << ") + R" << ir[3]
-                 << "(0x" << vT << ") = 0x" << res;
+            desc << "ADD (2's) R" << ir[1] << " <- R" << ir[2] << " + R" << ir[3];
             break;
         }
-        case '6': { // 6RST: ADD Float R <- S + T
-            std::string vS = reg.getReg(sIdx);
-            std::string vT = reg.getReg(tIdx);
-            std::string res = alu.addFloat(vS, vT);
+        case '6': {
+            std::string res = alu.addFloat(reg.getReg(sIdx), reg.getReg(tIdx));
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "ADD(Float) R" << ir[1] << " <- R" << ir[2] << "(0x" << vS << ") + R" << ir[3]
-                 << "(0x" << vT << ") = 0x" << res;
+            desc << "ADD (Float) R" << ir[1] << " <- R" << ir[2] << " + R" << ir[3];
             break;
         }
-        case '7': { // 7RST: OR R <- S | T
-            std::string vS = reg.getReg(sIdx);
-            std::string vT = reg.getReg(tIdx);
-            std::string res = alu.bitwiseOr(vS, vT);
+        case '7': {
+            std::string res = alu.bitwiseOr(reg.getReg(sIdx), reg.getReg(tIdx));
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "OR R" << ir[1] << " <- R" << ir[2] << "(0x" << vS << ") | R" << ir[3]
-                 << "(0x" << vT << ") = 0x" << res;
+            desc << "OR R" << ir[1] << " <- R" << ir[2] << " | R" << ir[3];
             break;
         }
-        case '8': { // 8RST: AND R <- S & T
-            std::string vS = reg.getReg(sIdx);
-            std::string vT = reg.getReg(tIdx);
-            std::string res = alu.bitwiseAnd(vS, vT);
+        case '8': {
+            std::string res = alu.bitwiseAnd(reg.getReg(sIdx), reg.getReg(tIdx));
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "AND R" << ir[1] << " <- R" << ir[2] << "(0x" << vS << ") & R" << ir[3]
-                 << "(0x" << vT << ") = 0x" << res;
+            desc << "AND R" << ir[1] << " <- R" << ir[2] << " & R" << ir[3];
             break;
         }
-        case '9': { // 9RST: XOR R <- S ^ T
-            std::string vS = reg.getReg(sIdx);
-            std::string vT = reg.getReg(tIdx);
-            std::string res = alu.bitwiseXor(vS, vT);
+        case '9': {
+            std::string res = alu.bitwiseXor(reg.getReg(sIdx), reg.getReg(tIdx));
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "XOR R" << ir[1] << " <- R" << ir[2] << "(0x" << vS << ") ^ R" << ir[3]
-                 << "(0x" << vT << ") = 0x" << res;
+            desc << "XOR R" << ir[1] << " <- R" << ir[2] << " ^ R" << ir[3];
             break;
         }
-        case 'A': { // AR0X: ROTATE R right by X bits
-            std::string vR = reg.getReg(rIdx);
-            std::string res = alu.rotateRight(vR, tIdx);
+        case 'A': {
+            std::string res = alu.rotateRight(reg.getReg(rIdx), tIdx);
             reg.setReg(rIdx, res);
             lastModifiedReg = rIdx;
-            desc << "ROTATE R" << ir[1] << " (0x" << vR << ") right by " << tIdx << " -> 0x" << res;
+            desc << "ROTATE R" << ir[1] << " right by " << tIdx;
             break;
         }
-        case 'B': { // BRXY: JUMP to XY if R == R0
-            std::string vR = reg.getReg(rIdx);
-            std::string v0 = reg.getReg(0);
-            if (vR == v0) {
+        case 'B': {
+            if (reg.getReg(rIdx) == reg.getReg(0)) {
                 pc = addr;
-                desc << "JUMP taken to 0x" << xy << " (R" << ir[1] << " == R0 == 0x" << v0 << ")";
+                desc << "JUMP to " << xy;
             } else {
-                desc << "JUMP not taken (R" << ir[1] << "[0x" << vR << "] != R0[0x" << v0 << "])";
+                desc << "JUMP not taken";
             }
             break;
         }
-        case 'C': { // C000: HALT
+        case 'C': {
             halted = true;
-            desc << "HALT execution (C000)";
+            desc << "HALT";
             break;
         }
         default: {
             halted = true;
-            desc << "Invalid Opcode '" << op << "' - Halted";
+            desc << "Invalid Opcode - Halted";
             break;
         }
     }
@@ -201,28 +163,18 @@ void CPU::decodeAndExecute(Memory& mem, std::string& screenBuffer) {
     lastActionDescription = desc.str();
 }
 
-// /*/*/*/*………
-
 bool CPU::runNextStep(Memory& mem, std::string& screenBuffer) {
-    if (halted) {
-        return false;
-    }
+    if (halted) return false;
     fetch(mem);
-    if (halted) {
-        return false;
-    }
+    if (halted) return false;
     if (!isValidInstruction(ir)) {
         halted = true;
-        lastActionDescription = "Invalid instruction '" + ir + "' at 0x" +
-                                ALU::decToHex(lastExecutedPC, 2) + " - Halted";
+        lastActionDescription = "Invalid instruction '" + ir + "' - Halted";
         return false;
     }
-    stepCount++;
     decodeAndExecute(mem, screenBuffer);
     return !halted;
 }
-
-// /*/*/*/*………
 
 void CPU::setPC(int addr) {
     if (addr >= 0 && addr < 256) {
@@ -231,45 +183,21 @@ void CPU::setPC(int addr) {
     }
 }
 
-// /*/*/*/*………
-
-int CPU::getPC() const {
-    return pc;
-}
-
-// /*/*/*/*………
-
-std::string CPU::getIR() const {
-    return ir;
-}
-
-// /*/*/*/*………
-
-bool CPU::isHalted() const {
-    return halted;
-}
-
-// /*/*/*/*………
+int CPU::getPC() const { return pc; }
+std::string CPU::getIR() const { return ir; }
+bool CPU::isHalted() const { return halted; }
 
 void CPU::halt() {
     halted = true;
-    lastActionDescription = "CPU Halted by user.";
+    lastActionDescription = "Halted";
 }
 
-// /*/*/*/*………
-
-const Register& CPU::getRegisters() const {
-    return reg;
-}
-
-// /*/*/*/*………
+const Register& CPU::getRegisters() const { return reg; }
 
 void CPU::setRegister(int index, std::string val) {
     reg.setReg(index, val);
     lastModifiedReg = index;
 }
-
-// /*/*/*/*………
 
 void CPU::reset(int startAddr) {
     pc = (startAddr >= 0 && startAddr < 256) ? startAddr : 0;
@@ -279,77 +207,9 @@ void CPU::reset(int startAddr) {
     lastExecutedPC = -1;
     lastModifiedReg = -1;
     lastWrittenMem = -1;
-    stepCount = 0;
-    screenHexHistory.clear();
-    lastActionDescription = "CPU Reset (PC = 0x" + ALU::decToHex(pc, 2) + ")";
+    lastActionDescription = "Reset";
 }
 
-// /*/*/*/*………
-
-const ALU& CPU::getALU() const {
-    return alu;
-}
-
-int CPU::getLastExecutedPC() const {
-    return lastExecutedPC;
-}
-
-int CPU::getLastModifiedReg() const {
-    return lastModifiedReg;
-}
-
-int CPU::getLastWrittenMem() const {
-    return lastWrittenMem;
-}
-
-int CPU::getStepCount() const {
-    return stepCount;
-}
-
-std::string CPU::getLastActionDescription() const {
-    return lastActionDescription;
-}
-
-const std::vector<std::string>& CPU::getScreenHexHistory() const {
-    return screenHexHistory;
-}
-
-// /*/*/*/*………
-
-std::string CPU::disassembleInstruction(const std::string& inst) {
-    if (inst.size() != 4 || !ALU::isValidHex(inst)) {
-        return "DATA / INVALID";
-    }
-    std::string u = inst;
-    for (char& c : u) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-
-    if (u == "0000") return "NOP / Empty (0000)";
-    if (!isValidInstruction(u)) return "Invalid Instruction (" + u + ")";
-
-    char op = u[0];
-    char r = u[1];
-    char s = u[2];
-    char t = u[3];
-    std::string xy = u.substr(2, 2);
-
-    std::ostringstream out;
-    switch (op) {
-        case '1': out << "LOAD R" << r << " <- Mem[0x" << xy << "]"; break;
-        case '2': out << "LOAD R" << r << " <- 0x" << xy << " (Imm)"; break;
-        case '3':
-            if (xy == "FF") out << "SCREEN [0xFF] <- R" << r;
-            else out << "STORE Mem[0x" << xy << "] <- R" << r;
-            break;
-        case '4': out << "MOVE R" << t << " <- R" << s; break;
-        case '5': out << "ADD(2's) R" << r << " <- R" << s << " + R" << t; break;
-        case '6': out << "ADD(Flt) R" << r << " <- R" << s << " + R" << t; break;
-        case '7': out << "OR  R" << r << " <- R" << s << " | R" << t; break;
-        case '8': out << "AND R" << r << " <- R" << s << " & R" << t; break;
-        case '9': out << "XOR R" << r << " <- R" << s << " ^ R" << t; break;
-        case 'A': out << "ROR R" << r << " >> " << ALU::hexToDec(std::string(1, t)) << " bits"; break;
-        case 'B': out << "JMP 0x" << xy << " if R" << r << " == R0"; break;
-        case 'C': out << "HALT Execution"; break;
-        default:  out << "Unknown"; break;
-    }
-    return out.str();
-}
+int CPU::getLastModifiedReg() const { return lastModifiedReg; }
+int CPU::getLastWrittenMem() const { return lastWrittenMem; }
+std::string CPU::getLastActionDescription() const { return lastActionDescription; }

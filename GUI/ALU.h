@@ -1,10 +1,3 @@
-/*
- * File: ALU.h
- * Date: 6 Oct 1973
- * Package: Processing
- * Description: Arithmetic Logic Unit for the Vole Machine Simulator.
- */
-
 #ifndef ALU_H
 #define ALU_H
 
@@ -29,9 +22,7 @@ public:
     std::string bitwiseXor(std::string val1, std::string val2) const;
     std::string rotateRight(std::string val, int steps) const;
 
-    // Inspection utilities for GUI display
     static int hexToSignedTwosComplement(const std::string& hexByte);
-    double decodeFloatByte(const std::string& hexByte) const;
 };
 
-#endif // ALU_H
+#endif

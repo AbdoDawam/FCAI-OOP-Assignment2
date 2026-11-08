@@ -1,10 +1,3 @@
-/*
- * File: VoleGUI.h
- * Date: 6 Oct 1973
- * Package: GUI
- * Description: Clean, Simple & Modern OOP C++ GUI for the Vole Machine Simulator.
- */
-
 #ifndef VOLE_GUI_H
 #define VOLE_GUI_H
 
@@ -25,7 +18,7 @@ struct UIButton {
     int id;
     Gdiplus::RectF rect;
     std::wstring label;
-    int style; // 0=neutral, 1=primary blue, 2=green, 3=purple, 4=red
+    int style;
 };
 
 class VoleGUI {
@@ -39,7 +32,6 @@ private:
     bool darkMode;
     bool showHelpModal;
 
-    // Simple click-to-overwrite state
     enum EditTarget { TARGET_NONE = 0, TARGET_MEMORY = 1, TARGET_REGISTER = 2, TARGET_PC = 3, TARGET_START_ADDR = 4 };
     EditTarget selectedTarget;
     int selectedMemAddr;
@@ -89,4 +81,4 @@ public:
     int runMessageLoop();
 };
 
-#endif // VOLE_GUI_H
+#endif

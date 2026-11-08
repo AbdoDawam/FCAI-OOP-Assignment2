@@ -1,10 +1,3 @@
-/*
- * File: Memory.h
- * Date: 6 Oct 1973
- * Package: Storage
- * Description: 256-cell main memory unit inheriting from Storage.
- */
-
 #ifndef MEMORY_H
 #define MEMORY_H
 
@@ -21,4 +14,4 @@ public:
     std::string getWord(int address) const;
 };
 
-#endif // MEMORY_H
+#endif

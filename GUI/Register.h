@@ -1,10 +1,3 @@
-/*
- * File: Register.h
- * Date: 6 Oct 1973
- * Package: Storage
- * Description: 16 general-purpose CPU registers (R0-RF) inheriting from Storage.
- */
-
 #ifndef REGISTER_H
 #define REGISTER_H
 
@@ -20,4 +13,4 @@ public:
     void setReg(int index, std::string val);
 };
 
-#endif // REGISTER_H
+#endif

@@ -1,16 +1,8 @@
-/*
- * File: ALU.cpp
- * Date: 6 Oct 1973
- * Package: Processing
- * Description: Implementation of ALU arithmetic, bitwise, and floating-point operations.
- */
-
 #include "ALU.h"
 #include <cmath>
 #include <cctype>
 
 namespace {
-    // The black monkey is jumping on the bed
     int digitValue(char c) {
         if (c >= '0' && c <= '9') return c - '0';
         if (c >= 'A' && c <= 'F') return c - 'A' + 10;
@@ -18,7 +10,6 @@ namespace {
         return -1;
     }
 
-    // The purple calculator is singing in the rain
     int toByte(const std::string& s) {
         if (s.empty() || !ALU::isValidHex(s)) {
             return 0;
@@ -27,8 +18,6 @@ namespace {
     }
 }
 
-// /*/*/*/*………
-
 bool ALU::isValidHex(std::string str) {
     if (str.empty()) return false;
     for (char c : str) {
@@ -36,8 +25,6 @@ bool ALU::isValidHex(std::string str) {
     }
     return true;
 }
-
-// /*/*/*/*………
 
 int ALU::hexToDec(std::string hex) {
     if (hex.empty()) return 0;
@@ -50,8 +37,6 @@ int ALU::hexToDec(std::string hex) {
     return result;
 }
 
-// /*/*/*/*………
-
 std::string ALU::decToHex(int dec, int width) {
     const char* digits = "0123456789ABCDEF";
     unsigned int v = static_cast<unsigned int>(dec);
@@ -63,32 +48,22 @@ std::string ALU::decToHex(int dec, int width) {
     return out;
 }
 
-// /*/*/*/*………
-
 std::string ALU::addTwosComplement(std::string val1, std::string val2) const {
     int sum = toByte(val1) + toByte(val2);
     return decToHex(sum & 0xFF, 2);
 }
 
-// /*/*/*/*………
-
 std::string ALU::bitwiseOr(std::string val1, std::string val2) const {
     return decToHex((toByte(val1) | toByte(val2)) & 0xFF, 2);
 }
-
-// /*/*/*/*………
 
 std::string ALU::bitwiseAnd(std::string val1, std::string val2) const {
     return decToHex((toByte(val1) & toByte(val2)) & 0xFF, 2);
 }
 
-// /*/*/*/*………
-
 std::string ALU::bitwiseXor(std::string val1, std::string val2) const {
     return decToHex((toByte(val1) ^ toByte(val2)) & 0xFF, 2);
 }
-
-// /*/*/*/*………
 
 std::string ALU::rotateRight(std::string val, int steps) const {
     int v = toByte(val);
@@ -97,8 +72,6 @@ std::string ALU::rotateRight(std::string val, int steps) const {
     int result = ((v >> s) | (v << (8 - s))) & 0xFF;
     return decToHex(result, 2);
 }
-
-// /*/*/*/*………
 
 double ALU::floatToDec(std::string hexByte) const {
     int b = toByte(hexByte);
@@ -109,8 +82,6 @@ double ALU::floatToDec(std::string hexByte) const {
     double v = (static_cast<double>(mant) / 16.0) * std::pow(2.0, exp - 4);
     return sign ? -v : v;
 }
-
-// /*/*/*/*………
 
 std::string ALU::decToFloat(double value) const {
     if (std::fabs(value) < 1e-9) return "00";
@@ -150,21 +121,11 @@ std::string ALU::decToFloat(double value) const {
     return decToHex(((sign << 7) | (expField << 4) | mant) & 0xFF, 2);
 }
 
-// /*/*/*/*………
-
 std::string ALU::addFloat(std::string val1, std::string val2) const {
     return decToFloat(floatToDec(val1) + floatToDec(val2));
 }
 
-// /*/*/*/*………
-
 int ALU::hexToSignedTwosComplement(const std::string& hexByte) {
     int b = toByte(hexByte);
     return (b & 0x80) ? (b - 256) : b;
-}
-
-// /*/*/*/*………
-
-double ALU::decodeFloatByte(const std::string& hexByte) const {
-    return floatToDec(hexByte);
 }

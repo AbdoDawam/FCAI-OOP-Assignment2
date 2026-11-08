@@ -1,10 +1,3 @@
-/*
- * File: VoleGUI.cpp
- * Date: 6 Oct 1973
- * Package: GUI
- * Description: Smooth, Soft & Modern OOP C++ GUI for the Vole Machine Simulator.
- */
-
 #include "VoleGUI.h"
 #include <commdlg.h>
 #include <dwmapi.h>
@@ -13,8 +6,6 @@
 #include <sstream>
 
 using namespace Gdiplus;
-
-// The black monkey is jumping on the bed
 
 namespace {
     constexpr int IDC_CODE_EDITOR = 2001;
@@ -74,7 +65,6 @@ namespace {
     }
 
     void drawSoftCard(Graphics& g, const RectF& r, REAL radius, bool darkMode) {
-        // Multi-layer soft ambient shadow
         for (int i = 3; i >= 1; --i) {
             REAL spread = static_cast<REAL>(i) * 1.8f;
             RectF sr(r.X - spread * 0.4f, r.Y + spread * 0.9f, r.Width + spread * 0.8f, r.Height + spread * 0.8f);
@@ -87,14 +77,11 @@ namespace {
         SolidBrush bgBrush(cardBg);
         fillRoundRect(g, &bgBrush, r, radius);
 
-        // Ultra-soft subtle edge highlight
         Color edgeCol = darkMode ? Color(35, 255, 255, 255) : Color(110, 226, 232, 240);
         Pen edgePen(edgeCol, 1.0f);
         drawRoundRect(g, &edgePen, r, radius);
     }
 }
-
-// /*/*/*/*………
 
 VoleGUI::VoleGUI()
     : hwnd(nullptr),
@@ -108,20 +95,16 @@ VoleGUI::VoleGUI()
       selectedRegIdx(0),
       startLoadAddr(0),
       hexInputBuffer(""),
-      statusText("Ready — Enter instructions or load a file to begin."),
+      statusText("Ready"),
       statusIsError(false),
       hoveredButtonId(-1),
       hoveredMemCell(-1),
       hoveredRegIdx(-1) {}
 
-// /*/*/*/*………
-
 VoleGUI::~VoleGUI() {
     if (hEditorFont) DeleteObject(hEditorFont);
     if (hEditorBgBrush) DeleteObject(hEditorBgBrush);
 }
-
-// /*/*/*/*………
 
 bool VoleGUI::create(HINSTANCE hInstance, int nCmdShow) {
     const wchar_t CLASS_NAME[] = L"VoleMachineSmoothModernGUI";
@@ -149,7 +132,6 @@ bool VoleGUI::create(HINSTANCE hInstance, int nCmdShow) {
     BOOL useDark = TRUE;
     DwmSetWindowAttribute(hwnd, 20, &useDark, sizeof(useDark));
 
-    // Create borderless inner EDIT control that blends seamlessly into a rounded container
     hCodeEditor = CreateWindowExW(
         0, L"EDIT", L"",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
@@ -162,7 +144,6 @@ bool VoleGUI::create(HINSTANCE hInstance, int nCmdShow) {
         CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
 
     SendMessageW(hCodeEditor, WM_SETFONT, reinterpret_cast<WPARAM>(hEditorFont), TRUE);
-    // Match exact inner container color so the edit box has no sharp rectangle edges
     hEditorBgBrush = CreateSolidBrush(RGB(34, 40, 56));
 
     RECT rc;
@@ -173,8 +154,6 @@ bool VoleGUI::create(HINSTANCE hInstance, int nCmdShow) {
     UpdateWindow(hwnd);
     return true;
 }
-
-// /*/*/*/*………
 
 int VoleGUI::runMessageLoop() {
     MSG msg = {};
@@ -190,8 +169,6 @@ int VoleGUI::runMessageLoop() {
     }
     return static_cast<int>(msg.wParam);
 }
-
-// /*/*/*/*………
 
 void VoleGUI::loadEditorProgramToRAM() {
     if (!hCodeEditor) return;
@@ -209,18 +186,16 @@ void VoleGUI::loadEditorProgramToRAM() {
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
-// /*/*/*/*………
-
 void VoleGUI::openProgramFileDialog() {
     wchar_t filePath[MAX_PATH] = {0};
     OPENFILENAMEW ofn = {};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
-    ofn.lpstrFilter = L"Text / Vole Files (*.txt;*.vole)\0*.txt;*.vole\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = filePath;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-    ofn.lpstrTitle = L"Select Vole Program File";
+    ofn.lpstrTitle = L"Load Program File";
 
     if (GetOpenFileNameW(&ofn)) {
         std::string filename = toNarrow(filePath);
@@ -242,32 +217,28 @@ void VoleGUI::openProgramFileDialog() {
     }
 }
 
-// /*/*/*/*………
-
 void VoleGUI::commitPendingHexEdit() {
     if (hexInputBuffer.empty()) return;
     std::string padded = (hexInputBuffer.size() == 1) ? ("0" + hexInputBuffer) : hexInputBuffer;
 
     if (selectedTarget == TARGET_MEMORY) {
         machine.getMemory().setCell(selectedMemAddr, padded);
-        statusText = "Memory [" + ALU::decToHex(selectedMemAddr, 2) + "] updated to " + padded;
+        statusText = "Memory [" + ALU::decToHex(selectedMemAddr, 2) + "] = " + padded;
     } else if (selectedTarget == TARGET_REGISTER) {
         machine.getCPU().setRegister(selectedRegIdx, padded);
-        statusText = "Register R" + ALU::decToHex(selectedRegIdx, 1) + " updated to " + padded;
+        statusText = "Register R" + ALU::decToHex(selectedRegIdx, 1) + " = " + padded;
     } else if (selectedTarget == TARGET_PC) {
         int evenAddr = ALU::hexToDec(padded) & 0xFE;
         machine.getCPU().setPC(evenAddr);
-        statusText = "Program Counter (PC) set to " + ALU::decToHex(evenAddr, 2);
+        statusText = "PC = " + ALU::decToHex(evenAddr, 2);
     } else if (selectedTarget == TARGET_START_ADDR) {
         startLoadAddr = ALU::hexToDec(padded) & 0xFE;
         if (startLoadAddr > 254) startLoadAddr = 0;
-        statusText = "Start Address set to " + ALU::decToHex(startLoadAddr, 2);
+        statusText = "Start Address = " + ALU::decToHex(startLoadAddr, 2);
     }
     statusIsError = false;
     hexInputBuffer.clear();
 }
-
-// /*/*/*/*………
 
 void VoleGUI::applyHexInputDigit(char hexChar) {
     if (selectedTarget == TARGET_NONE) return;
@@ -281,15 +252,12 @@ void VoleGUI::applyHexInputDigit(char hexChar) {
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
-// /*/*/*/*………
-
 void VoleGUI::updateEditorLayout(int width, int height) {
     if (!hCodeEditor) return;
     float rightX = width * 0.68f;
     float rightW = width - rightX - 22.0f;
     float contentH = height - 166.0f;
 
-    // Inset the native EDIT control inside the rounded pill box so its corners are hidden
     int edX = static_cast<int>(rightX + 26.0f);
     int edY = 166;
     int edW = static_cast<int>(rightW - 52.0f);
@@ -299,15 +267,12 @@ void VoleGUI::updateEditorLayout(int width, int height) {
     MoveWindow(hCodeEditor, edX, edY, edW, edH, TRUE);
 }
 
-// /*/*/*/*………
-
 void VoleGUI::renderFrame(HDC hdc, int width, int height) {
     if (width <= 0 || height <= 0) return;
 
     Bitmap backBuffer(width, height, PixelFormat32bppPARGB);
     Graphics g(&backBuffer);
 
-    // Maximum smoothness & sub-pixel anti-aliasing
     g.SetSmoothingMode(SmoothingModeHighQuality);
     g.SetPixelOffsetMode(PixelOffsetModeHighQuality);
     g.SetCompositingQuality(CompositingQualityHighQuality);
@@ -347,8 +312,6 @@ void VoleGUI::renderFrame(HDC hdc, int width, int height) {
     screenG.DrawImage(&backBuffer, 0, 0);
 }
 
-// /*/*/*/*………
-
 void VoleGUI::drawHeaderBar(Graphics& g, int width) {
     RectF headerCard(22.0f, 14.0f, width - 44.0f, 50.0f);
     drawSoftCard(g, headerCard, 16.0f, darkMode);
@@ -364,7 +327,6 @@ void VoleGUI::drawHeaderBar(Graphics& g, int width) {
     SolidBrush mainBrush(textMain);
     g.DrawString(L"Vole Machine Simulator", -1, &titleFont, PointF(42.0f, 27.0f), &mainBrush);
 
-    // Soft Status Pill
     Color stCol = statusIsError
                       ? Color(255, 251, 113, 133)
                       : (darkMode ? Color(255, 129, 140, 248) : Color(255, 79, 70, 229));
@@ -386,8 +348,6 @@ void VoleGUI::drawHeaderBar(Graphics& g, int width) {
     g.DrawString(L"Help", -1, &btnFont, helpBtn, &centerFmt, &mainBrush);
     g.DrawString(darkMode ? L"Light UI" : L"Dark UI", -1, &btnFont, themeBtn, &centerFmt, &mainBrush);
 }
-
-// /*/*/*/*………
 
 void VoleGUI::drawCPUPanel(Graphics& g, const RectF& rect) {
     drawSoftCard(g, rect, 20.0f, darkMode);
@@ -411,7 +371,6 @@ void VoleGUI::drawCPUPanel(Graphics& g, const RectF& rect) {
 
     const CPU& cpu = machine.getCPU();
 
-    // Smooth Pill Boxes for PC & IR
     float boxW = (rect.Width - 48.0f) * 0.5f;
     pcBoxRect = RectF(rect.X + 20.0f, rect.Y + 46.0f, boxW, 54.0f);
     RectF irBoxRect(pcBoxRect.X + boxW + 8.0f, rect.Y + 46.0f, boxW, 54.0f);
@@ -468,7 +427,6 @@ void VoleGUI::drawCPUPanel(Graphics& g, const RectF& rect) {
             bg = darkMode ? Color(255, 44, 52, 72) : Color(255, 226, 232, 240);
         }
 
-        // Borderless soft pill for each register
         SolidBrush rb(bg);
         fillRoundRect(g, &rb, rc, 11.0f);
 
@@ -488,8 +446,6 @@ void VoleGUI::drawCPUPanel(Graphics& g, const RectF& rect) {
                      PointF(rx + colW - 40.0f, ry + (rowH - 18.0f) * 0.5f), &valBrush);
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::drawMemoryPanel(Graphics& g, const RectF& rect) {
     drawSoftCard(g, rect, 20.0f, darkMode);
@@ -568,7 +524,6 @@ void VoleGUI::drawMemoryPanel(Graphics& g, const RectF& rect) {
                 bg = darkMode ? Color(255, 48, 57, 79) : Color(255, 226, 232, 240);
             }
 
-            // Soft, borderless rounded pill for every memory cell (no harsh grid lines!)
             SolidBrush cb(bg);
             fillRoundRect(g, &cb, cr, 7.5f);
 
@@ -587,8 +542,6 @@ void VoleGUI::drawMemoryPanel(Graphics& g, const RectF& rect) {
         }
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::drawProgramAndScreenPanel(Graphics& g, const RectF& rect) {
     drawSoftCard(g, rect, 20.0f, darkMode);
@@ -612,7 +565,6 @@ void VoleGUI::drawProgramAndScreenPanel(Graphics& g, const RectF& rect) {
 
     g.DrawString(L"Program Input", -1, &headerFont, PointF(rect.X + 20.0f, rect.Y + 16.0f), &mainBrush);
 
-    // Start Address + Smooth Pill Button
     float rowY = rect.Y + 46.0f;
     g.DrawString(L"Start Addr:", -1, &smallBold, PointF(rect.X + 20.0f, rowY + 7.0f), &subBrush);
 
@@ -636,13 +588,11 @@ void VoleGUI::drawProgramAndScreenPanel(Graphics& g, const RectF& rect) {
     fillRoundRect(g, &loadGrad, loadBtn, 14.0f);
     g.DrawString(L"Load Program to Memory", -1, &smallBold, loadBtn, &centerFmt, &whiteBrush);
 
-    // Smooth Rounded Container around the native EDIT control so there are zero sharp corners
     int edH = static_cast<int>(rect.Height * 0.48f);
     if (edH < 150) edH = 150;
     RectF edContainer(rect.X + 18.0f, 156.0f, rect.Width - 36.0f, static_cast<float>(edH));
     fillRoundRect(g, &itemBrush, edContainer, 16.0f);
 
-    // Screen Output Box below Editor
     float scrTitleY = edContainer.Y + edContainer.Height + 20.0f;
     g.DrawString(L"Screen Display (Address FF)", -1, &headerFont,
                  PointF(rect.X + 20.0f, scrTitleY), &mainBrush);
@@ -671,8 +621,6 @@ void VoleGUI::drawProgramAndScreenPanel(Graphics& g, const RectF& rect) {
                      PointF(scrBox.X + 16.0f, scrBox.Y + scrBox.Height - 30.0f), &subBrush);
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::drawBottomControlBar(Graphics& g, int width, int height) {
     RectF barCard(22.0f, height - 74.0f, width - 44.0f, 60.0f);
@@ -709,19 +657,19 @@ void VoleGUI::drawBottomControlBar(Graphics& g, int width, int height) {
 
         bool hov = (hoveredButtonId == b.id);
         Color bg1, bg2, fg;
-        if (b.style == 2) { // Soft Mint/Emerald
+        if (b.style == 2) {
             bg1 = hov ? Color(255, 16, 185, 129) : Color(255, 52, 211, 153);
             bg2 = hov ? Color(255, 5, 150, 105) : Color(255, 16, 185, 129);
             fg = Color(255, 255, 255, 255);
-        } else if (b.style == 1) { // Soft Indigo
+        } else if (b.style == 1) {
             bg1 = hov ? Color(255, 99, 102, 241) : Color(255, 129, 140, 248);
             bg2 = hov ? Color(255, 79, 70, 229) : Color(255, 99, 102, 241);
             fg = Color(255, 255, 255, 255);
-        } else if (b.style == 4) { // Soft Rose
+        } else if (b.style == 4) {
             bg1 = hov ? Color(255, 244, 63, 94) : Color(255, 251, 113, 133);
             bg2 = hov ? Color(255, 225, 29, 72) : Color(255, 244, 63, 94);
             fg = Color(255, 255, 255, 255);
-        } else { // Soft Pill Neutral
+        } else {
             Color c = darkMode
                           ? (hov ? Color(255, 45, 53, 74) : Color(255, 34, 40, 56))
                           : (hov ? Color(255, 226, 232, 240) : Color(255, 238, 242, 247));
@@ -732,14 +680,12 @@ void VoleGUI::drawBottomControlBar(Graphics& g, int width, int height) {
 
         LinearGradientBrush bb(r, bg1, bg2, LinearGradientModeVertical);
         SolidBrush fb(fg);
-        fillRoundRect(g, &bb, r, 20.0f); // Full capsule pill button
+        fillRoundRect(g, &bb, r, 20.0f);
         g.DrawString(b.label, -1, &btnFont, r, &centerFmt, &fb);
 
         startX += b.w + 16.0f;
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::drawHelpModal(Graphics& g, int width, int height) {
     SolidBrush dim(Color(185, 10, 12, 18));
@@ -787,11 +733,9 @@ void VoleGUI::drawHelpModal(Graphics& g, int width, int height) {
         y += 30.0f;
     }
 
-    g.DrawString(L"Tip: Click any Register (R0-RF), Memory Cell (00-FF), or PC to type a new hex value.",
+    g.DrawString(L"Click any Register (R0-RF), Memory Cell (00-FF), or PC to type a new hex value.",
                  -1, &rowF, PointF(mr.X + 28.0f, mr.Y + mh - 38.0f), &subB);
 }
-
-// /*/*/*/*………
 
 void VoleGUI::onButtonClick(int buttonId) {
     commitPendingHexEdit();
@@ -808,7 +752,7 @@ void VoleGUI::onButtonClick(int buttonId) {
                 machine.getCPU().setPC(startLoadAddr);
             }
             int steps = machine.executeAllAtOnce(1000);
-            statusText = "Finished running (" + std::to_string(steps) + " steps) — " +
+            statusText = "Executed " + std::to_string(steps) + " steps — " +
                          machine.getCPU().getLastActionDescription();
             statusIsError = false;
             InvalidateRect(hwnd, nullptr, FALSE);
@@ -816,7 +760,7 @@ void VoleGUI::onButtonClick(int buttonId) {
         }
         case BTN_SINGLE_STEP: {
             if (machine.getCPU().isHalted()) {
-                statusText = "Program is Halted. Click 'Clear / Reset' or 'Load Program' to run again.";
+                statusText = "Halted.";
                 statusIsError = true;
             } else {
                 machine.executeSingleStep();
@@ -828,13 +772,13 @@ void VoleGUI::onButtonClick(int buttonId) {
         }
         case BTN_HALT:
             machine.haltExecution();
-            statusText = "Execution Halted.";
+            statusText = "Halted.";
             statusIsError = false;
             InvalidateRect(hwnd, nullptr, FALSE);
             break;
         case BTN_RESET:
             machine.resetMachine();
-            statusText = "Machine cleared and reset to 00.";
+            statusText = "Reset.";
             statusIsError = false;
             InvalidateRect(hwnd, nullptr, FALSE);
             break;
@@ -852,8 +796,6 @@ void VoleGUI::onButtonClick(int buttonId) {
             break;
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::onMouseDown(int x, int y) {
     PointF pt(static_cast<REAL>(x), static_cast<REAL>(y));
@@ -879,7 +821,7 @@ void VoleGUI::onMouseDown(int x, int y) {
             selectedTarget = TARGET_MEMORY;
             selectedMemAddr = i;
             SetFocus(hwnd);
-            statusText = "Selected Memory [" + ALU::decToHex(i, 2) + "] — Type 2 hex digits (0-F) to overwrite.";
+            statusText = "Selected Memory [" + ALU::decToHex(i, 2) + "] — Type 2 hex digits.";
             statusIsError = false;
             InvalidateRect(hwnd, nullptr, FALSE);
             return;
@@ -892,7 +834,7 @@ void VoleGUI::onMouseDown(int x, int y) {
             selectedTarget = TARGET_REGISTER;
             selectedRegIdx = i;
             SetFocus(hwnd);
-            statusText = "Selected Register R" + ALU::decToHex(i, 1) + " — Type 2 hex digits (0-F) to overwrite.";
+            statusText = "Selected Register R" + ALU::decToHex(i, 1) + " — Type 2 hex digits.";
             statusIsError = false;
             InvalidateRect(hwnd, nullptr, FALSE);
             return;
@@ -903,7 +845,7 @@ void VoleGUI::onMouseDown(int x, int y) {
         commitPendingHexEdit();
         selectedTarget = TARGET_PC;
         SetFocus(hwnd);
-        statusText = "Selected PC — Type an even hex address (e.g. 00, 04) to set PC.";
+        statusText = "Selected PC — Type an even hex address.";
         statusIsError = false;
         InvalidateRect(hwnd, nullptr, FALSE);
         return;
@@ -913,14 +855,12 @@ void VoleGUI::onMouseDown(int x, int y) {
         commitPendingHexEdit();
         selectedTarget = TARGET_START_ADDR;
         SetFocus(hwnd);
-        statusText = "Selected Start Address — Type an even hex address (e.g. 00, 10, 20).";
+        statusText = "Selected Start Address — Type an even hex address.";
         statusIsError = false;
         InvalidateRect(hwnd, nullptr, FALSE);
         return;
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::onMouseMove(int x, int y) {
     PointF pt(static_cast<REAL>(x), static_cast<REAL>(y));
@@ -959,16 +899,12 @@ void VoleGUI::onMouseMove(int x, int y) {
     }
 }
 
-// /*/*/*/*………
-
 void VoleGUI::onCharInput(WCHAR ch) {
     if (showHelpModal) return;
     if ((ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'f') || (ch >= L'A' && ch <= L'F')) {
         applyHexInputDigit(static_cast<char>(ch));
     }
 }
-
-// /*/*/*/*………
 
 void VoleGUI::onKeyDown(WPARAM key) {
     if (key == VK_RETURN) {
@@ -979,8 +915,6 @@ void VoleGUI::onKeyDown(WPARAM key) {
         InvalidateRect(hwnd, nullptr, FALSE);
     }
 }
-
-// /*/*/*/*………
 
 LRESULT CALLBACK VoleGUI::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     VoleGUI* self = nullptr;

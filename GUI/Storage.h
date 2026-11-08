@@ -1,10 +1,3 @@
-/*
- * File: Storage.h
- * Date: 6 Oct 1973
- * Package: Storage
- * Description: Abstract base class for fixed-size hexadecimal storage units.
- */
-
 #ifndef STORAGE_H
 #define STORAGE_H
 
@@ -28,4 +21,4 @@ public:
     int getSize() const;
 };
 
-#endif // STORAGE_H
+#endif
