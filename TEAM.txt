@@ -1,0 +1,24 @@
+// File with team details and who did which part of the code
+SECTION:       S05
+
+ZIP_FILE:      CS213_A2_Part3_S05_20250346_20250554_20250560_20250606.zip
+
+ID1:           20250346
+NAME1:         Abdelrahman Ahmed Elsayed
+FILES1:        Storage.h, Storage.cpp, Memory.h, Memory.cpp, Register.h, Register.cpp
+
+ID2:           20250554
+NAME2:         Mohamed Hossam Abdelsamad
+FILES2:        Machine.h, Machine.cpp
+
+ID3:           20250560
+NAME3:         Full Name
+FILES3:        CPU.h, CPU.cpp
+
+ID4:           20250606
+NAME4:         Mahmoud Ehab Ali
+FILES4:        ALU.h, ALU.cpp
+
+GITHUB:        https://github.com/...
+VIDEO_DESIGN:  https://drive.google.com/file/d/1GWYQtquJW_TSAd0xNAMjO-2qyWC_rN8o/view?usp=drivesdk
+VIDEO_GUI:     https://youtube.com/...   (leave blank if no GUI)
