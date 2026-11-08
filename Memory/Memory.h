@@ -4,10 +4,12 @@
 #include "../Storage/Storage.h"
 #include <string>
 
+using namespace std;
+
 class Memory : public Storage {
 public:
     Memory();
-    std::string getWord(int address) const;
+    string getWord(int address) const;
 };
 
 #endif

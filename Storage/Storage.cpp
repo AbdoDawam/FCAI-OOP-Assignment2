@@ -2,56 +2,49 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cctype>
 
 using namespace std;
 
+string Storage::normalizeHexValue(const string& val) const {
+    string normalized = val;
+    transform(normalized.begin(), normalized.end(), normalized.begin(),
+              [](unsigned char c) { return static_cast<char>(toupper(c)); });
 
-class Storage{
-    protected:
-        int size;
-        vector<string> cells;
+    while (normalized.length() < 2) {
+        normalized = "0" + normalized;
+    }
+    if (normalized.length() > 2) {
+        normalized = normalized.substr(normalized.length() - 2);
+    }
 
-        string normalizeHexValue(string val) const { 
-            transform(val.begin(), val.end(), val.begin(), ::toupper);
+    return normalized;
+}
 
-            if (val.length() < 2) {
-                val = "0" + val;
-            }
+Storage::Storage(int s) : size(s), cells(s, "00") {}
 
-            return val;
-        }
+string Storage::getCell(int index) const {
+    if (index >= 0 && index < size) {
+        return cells[index];
+    }
+    cout << "Index out of bounds" << endl;
+    return "00";
+}
 
-    public:
-        Storage(int s) : size(s) {
-            cells.resize(size);
-        }
+void Storage::setCell(int index, string val) {
+    if (index >= 0 && index < size) {
+        cells[index] = normalizeHexValue(val);
+    } else {
+        cout << "Index out of bounds" << endl;
+    }
+}
 
-        virtual string getCell(int index) const {
-            if (index >= 0 && index < size) {
-                return cells[index];
-            }
-            cout << "Index out of bounds" << endl;
-            return "";
-        }
+void Storage::clear() {
+    fill(cells.begin(), cells.end(), "00");
+}
 
-        virtual void setCell(int index, string val) {
-            if (index >= 0 && index < size) {
-                cells[index] = normalizeHexValue(val);
-            }
-            else {
-                cout << "Index out of bounds" << endl;
-            }
-        }
+int Storage::getSize() const {
+    return size;
+}
 
-        virtual void clear() {
-            fill(cells.begin(), cells.end(), "00");
-        }
-
-        int getSize() const {
-            return size;
-        }
-
-        virtual ~Storage() {
-            cout << "Storage destroyed" << endl;
-        }
-};
+Storage::~Storage() = default;

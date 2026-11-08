@@ -1,8 +1,13 @@
-#include <iostream>
 #ifndef CPU_H
 #define CPU_H
-using namespace std;
 
+#include <iostream>
+#include <string>
+#include "../Register/Register.h"
+#include "../Memory/Memory.h"
+#include "../ALU/ALU.h"
+
+using namespace std;
 
 class CPU {
 private:
@@ -14,7 +19,7 @@ private:
 public:
     CPU();
     void fetch(const Memory& mem);
-    void decodeAndExecute(Memory& mem , string& screenBuffer);
+    void decodeAndExecute(Memory& mem, string& screenBuffer);
     bool runNextStep(Memory& mem, string& screenBuffer);
     bool isValidInstruction(string inst);
     void setPC(int addr);
@@ -23,7 +28,7 @@ public:
     bool isHalted() const;
     const Register& getRegister() const;
     void setRegister(int index, string val);
-    void reset(int startAddress=0);
+    void reset(int startAddress = 0);
 };
 
 #endif

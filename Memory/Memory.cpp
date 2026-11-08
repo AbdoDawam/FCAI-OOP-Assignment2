@@ -1,6 +1,5 @@
 #include "Memory.h"
 #include <stdexcept>
-
 using namespace std;
 
 
