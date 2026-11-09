@@ -1,6 +1,6 @@
 ========================================================================
 VOLE MACHINE SIMULATOR
-CS213: Object Oriented Programming - Assignment 2 (Part 2 & Bonus Part 3)
+CS213: Object Oriented Programming - Assignment 2 (Bonus Part)
 ========================================================================
 
 1. HOW TO COMPILE & RUN
