@@ -19,6 +19,6 @@ ID4:           20250606
 NAME4:         Mahmoud Ehab Ali
 FILES4:        ALU.h, ALU.cpp
 
-GITHUB:        https://github.com/...
+GITHUB:        https://github.com/AbdoDawam/FCAI-OOP-Assignment2
 VIDEO_DESIGN:  https://drive.google.com/file/d/1GWYQtquJW_TSAd0xNAMjO-2qyWC_rN8o/view?usp=drivesdk
-VIDEO_GUI:     https://youtube.com/...   (leave blank if no GUI)
+VIDEO_GUI:     https://drive.google.com/file/d/1quAO92AO2g69pcsW3gSTsNNYNgcOtdPx/view?usp=drivesdk
