@@ -12,7 +12,7 @@ NAME2:         Mohamed Hossam Abdelsamad
 FILES2:        Machine.h, Machine.cpp
 
 ID3:           20250560
-NAME3:         Full Name
+NAME3:         Mohamed Ramy Mohamed 
 FILES3:        CPU.h, CPU.cpp
 
 ID4:           20250606

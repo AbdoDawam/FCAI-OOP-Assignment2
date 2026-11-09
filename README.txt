@@ -9,13 +9,6 @@ Step 1:
  Go to GUI Folder
 
 Step 2:
-  Option A: Double-click `build_and_run.bat`
+ Double-click `build_and_run.bat`
 
-  Option B: Compile manually using MinGW-w64 (g++):
-    g++ -std=c++17 Storage.cpp Memory.cpp Register.cpp ALU.cpp CPU.cpp Machine.cpp VoleGUI.cpp main.cpp -o VoleMachineGUI.exe -lgdiplus -lgdi32 -lcomdlg32 -ldwmapi -mwindows
 
-  To run the GUI:
-    .\VoleMachineGUI.exe
-
-  To run in Console Menu (CLI) mode:
-    .\VoleMachineGUI.exe --cli
